@@ -14,13 +14,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy requirements from backend/
-COPY backend/requirements.txt ./requirements.txt
+# Copy entire build context
+COPY . .
+
+# Universal context adapter: if files are nested in backend/, move them to /app
+RUN if [ -d "backend" ]; then \
+        cp -r backend/* . && rm -rf backend; \
+    fi
+
+# Ensure requirements are installed
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend application code and config
-COPY backend/app/ ./app/
-COPY backend/models/ ./models/
+# Ensure models directory exists
+RUN mkdir -p models && touch models/.gitkeep
 
 # Create a non-root user for security best practices
 RUN useradd -m appuser && chown -R appuser:appuser /app

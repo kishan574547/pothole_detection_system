@@ -1,7 +1,6 @@
 # Multi-stage lightweight Python container for YOLOv4 + OpenCV FastAPI Backend
 FROM python:3.11-slim
 
-# Prevent Python from writing .pyc and buffer stdout
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=8000
@@ -15,13 +14,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install Python dependencies first for caching
-COPY requirements.txt .
+# Copy entire build context
+COPY . .
+
+# Universal context adapter: if files are nested in backend/, move them to /app
+RUN if [ -d "backend" ]; then \
+        cp -r backend/* . && rm -rf backend; \
+    fi
+
+# Ensure requirements are installed
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application source code and pre-trained weights
-COPY app/ ./app/
-COPY models/ ./models/
+# Ensure models directory exists
+RUN mkdir -p models && touch models/.gitkeep
 
 # Create a non-root user for security best practices
 RUN useradd -m appuser && chown -R appuser:appuser /app
@@ -33,5 +38,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:${PORT}/health || exit 1
 
-# Start FastAPI server using uvicorn (respecting PORT environment variable)
+# Start FastAPI server using uvicorn
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
