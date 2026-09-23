@@ -29,7 +29,24 @@ class PotholeDetector:
                 return classes if classes else ["Pothole"]
         return ["Pothole"]
 
+    WEIGHTS_DOWNLOAD_URL = "https://raw.githubusercontent.com/akshxyjagtap/Pothole-Detection-System-using-YOLO-Tiny-v4/main/utils/yolov4_tiny.weights"
+    CFG_DOWNLOAD_URL = "https://raw.githubusercontent.com/akshxyjagtap/Pothole-Detection-System-using-YOLO-Tiny-v4/main/utils/yolov4_tiny.cfg"
+
+    def _ensure_weights(self):
+        import urllib.request
+        os.makedirs(os.path.dirname(self.weights_path), exist_ok=True)
+        if not os.path.exists(self.weights_path) or os.path.getsize(self.weights_path) < 1000000:
+            print(f"Weights file not found at {self.weights_path}. Downloading from external host...")
+            urllib.request.urlretrieve(self.WEIGHTS_DOWNLOAD_URL, self.weights_path)
+            print(f"Downloaded weights successfully ({os.path.getsize(self.weights_path)} bytes).")
+
+        if not os.path.exists(self.cfg_path):
+            print(f"Config file not found at {self.cfg_path}. Downloading...")
+            urllib.request.urlretrieve(self.CFG_DOWNLOAD_URL, self.cfg_path)
+            print(f"Downloaded cfg successfully.")
+
     def _load_model(self) -> cv2.dnn.Net:
+        self._ensure_weights()
         if not os.path.exists(self.cfg_path):
             raise FileNotFoundError(f"Config file not found: {self.cfg_path}")
         if not os.path.exists(self.weights_path):
