@@ -1,24 +1,20 @@
 import type { DetectionResponse, HealthResponse } from '../types';
 
-const STORAGE_KEY_API_URL = 'pothole_detector_api_url';
-
-export const getDefaultApiUrl = (): string => {
-  return import.meta.env.VITE_API_URL || 'http://localhost:8000';
-};
+// Default live backend URL on Render with environment variable fallback
+const DEFAULT_BACKEND_URL = 'https://pothole-detection-system-djrn.onrender.com';
 
 export const getApiUrl = (): string => {
-  return localStorage.getItem(STORAGE_KEY_API_URL) || getDefaultApiUrl();
-};
-
-export const setApiUrl = (url: string): void => {
-  const trimmed = url.trim().replace(/\/+$/, '');
-  localStorage.setItem(STORAGE_KEY_API_URL, trimmed);
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
+    return envUrl.trim().replace(/\/+$/, '');
+  }
+  return DEFAULT_BACKEND_URL;
 };
 
 export const checkHealth = async (baseUrl?: string): Promise<HealthResponse> => {
   const url = `${baseUrl || getApiUrl()}/health`;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 6000);
+  const timeout = setTimeout(() => controller.abort(), 8000);
 
   try {
     const res = await fetch(url, { signal: controller.signal });
@@ -50,7 +46,8 @@ export const detectPotholes = async (
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 45000);
+  // 60s timeout to allow for Render free-tier cold starts
+  const timeout = setTimeout(() => controller.abort(), 60000);
 
   try {
     const response = await fetch(endpoint, {
@@ -77,7 +74,7 @@ export const detectPotholes = async (
   } catch (err: any) {
     clearTimeout(timeout);
     if (err.name === 'AbortError') {
-      throw new Error('Inference request timed out. The server might be waking up from cold start (free tier) or is unreachable.');
+      throw new Error('Inference request timed out. The backend on Render may be waking up from cold start (free tier) — please try again in a few seconds.');
     }
     throw err;
   }

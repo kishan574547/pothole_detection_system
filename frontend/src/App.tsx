@@ -5,7 +5,6 @@ import { ComparisonView } from './components/ComparisonView';
 import { DetectionResults } from './components/DetectionResults';
 import { DetectionControls } from './components/DetectionControls';
 import { TechnicalSpecsModal } from './components/TechnicalSpecsModal';
-import { ApiSettingsModal } from './components/ApiSettingsModal';
 import { checkHealth, detectPotholes } from './services/api';
 import type { DetectionResponse, HealthResponse } from './types';
 import { AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react';
@@ -27,7 +26,6 @@ export const App: React.FC = () => {
 
   // Modals
   const [isSpecsOpen, setIsSpecsOpen] = useState<boolean>(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   // Fetch API Health
   const loadHealth = useCallback(async () => {
@@ -70,7 +68,7 @@ export const App: React.FC = () => {
     } catch (err: any) {
       console.error('Detection failed:', err);
       setErrorMessage(
-        err.message || 'An error occurred during inference. Ensure the backend API is running.'
+        err.message || 'An error occurred during inference. Ensure the backend API on Render is awake.'
       );
     } finally {
       setIsLoading(false);
@@ -100,7 +98,7 @@ export const App: React.FC = () => {
     }
   };
 
-  // Auto-load first sample on initial page load if none selected
+  // Auto-load first sample on initial page load
   useEffect(() => {
     const autoLoadSample = async () => {
       try {
@@ -124,7 +122,6 @@ export const App: React.FC = () => {
       <Header
         health={health}
         isHealthLoading={isHealthLoading}
-        onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenSpecs={() => setIsSpecsOpen(true)}
       />
 
@@ -163,13 +160,6 @@ export const App: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                onClick={() => setIsSettingsOpen(true)}
-                className="btn btn-secondary"
-                style={{ padding: '6px 14px', fontSize: '0.8rem', background: 'rgba(0,0,0,0.3)' }}
-              >
-                Configure API URL
-              </button>
               {currentImageFile && (
                 <button
                   onClick={handleApplyThresholds}
@@ -253,19 +243,10 @@ export const App: React.FC = () => {
         </div>
       </footer>
 
-      {/* Modals */}
+      {/* Architecture Specs Modal */}
       <TechnicalSpecsModal
         isOpen={isSpecsOpen}
         onClose={() => setIsSpecsOpen(false)}
-      />
-
-      <ApiSettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        onSaved={() => {
-          loadHealth();
-          if (currentImageFile) handleApplyThresholds();
-        }}
       />
     </div>
   );

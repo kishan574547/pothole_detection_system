@@ -1,18 +1,16 @@
 import React from 'react';
-import { ShieldAlert, Settings, Layers } from 'lucide-react';
+import { ShieldAlert, Layers } from 'lucide-react';
 import type { HealthResponse } from '../types';
 
 interface HeaderProps {
   health: HealthResponse | null;
   isHealthLoading: boolean;
-  onOpenSettings: () => void;
   onOpenSpecs: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   health,
   isHealthLoading,
-  onOpenSettings,
   onOpenSpecs,
 }) => {
   return (
@@ -80,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
                 ? 'Connecting API...'
                 : health?.model_loaded
                 ? 'Model Ready (CPU DNN)'
-                : 'API Offline'}
+                : 'API Connecting...'}
             </span>
           </div>
 
@@ -93,16 +91,6 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Layers size={16} color="#06b6d4" />
             <span>Architecture</span>
-          </button>
-
-          {/* API Config Gear */}
-          <button
-            onClick={onOpenSettings}
-            className="btn btn-secondary"
-            style={{ padding: '8px 12px' }}
-            title="Configure Backend API URL"
-          >
-            <Settings size={16} color="var(--text-secondary)" />
           </button>
         </div>
       </div>
